@@ -1,47 +1,29 @@
-from typing import List
-from pydantic import BaseModel
-from openai_vision import analyze_image_basic,generate_with_response_model
+from openai_functions import analyze_image_basic,generate_with_response_model
 from prompt_template import anlysis_prompt
+from ai_personas import persona_prompts_small,persona_prompts_big
+from models import SuggestionsModel
+import web_screenshot
 
-class SuggestionsModel(BaseModel):
-    result: List[str]
+url = "https://learnwithhasan.com"
 
-# Personas and their prompts
-persona_prompts = [
-    {"Young Entrepreneur": "As a young, tech-savvy entrepreneur interested in the latest market trends and innovations, "},
-    {"College Student": "As a computer science student with interests in gaming and social media, "},
-    {"Freelance Graphic Designer": "As a freelance graphic designer, "},
-    {"Corporate Executive": "As a busy corporate executive, "},
-    {"Small Business Owner": "As a small business owner of a local café, "},
-    {"Professional Blogger": "As a professional blogger, "},
-    {"Travel Enthusiast": "As a travel enthusiast, "},
-    {"Software Developer": "As a software developer, "},
-    {"Fashion Influencer": "As a fashion influencer, "},
-    {"Senior Research Scientist": "As a senior research scientist, "},
-    {"Digital Nomad": "As a digital nomad who travels while working remotely, "},
-    {"Art Student": "As an art student, "},
-    {"Digital Marketing Expert": "As a digital marketing expert with a strong background in SEO, PPC, and social media advertising, "}
-]
-
-image_url = "https://static.semrush.com/blog/uploads/media/ed/9b/ed9b42a338de806621bdaf70293c2e7e/image.png"
-#prompt = f"As a young, tech-savvy entrepreneur interested in the latest market trends and innovations,  {anlysis_prompt}"
-
+captured_image_path = web_screenshot.capture_web_page_image(url,"screenshot_test.jpg")
+image_url = web_screenshot.upload_to_imgur(captured_image_path)
 
 # Initialize an empty list to store all the results
-all_results = []
+all_persona_results = []
 
-
-#Example of how to loop through the list and print each prompt
-for persona in persona_prompts:
+#loop through the list or personas and ask for evaluation
+for persona in persona_prompts_small:
     for title, prompt in persona.items():
+        print(f"Analyzing With: {title}...")
         persona_prompt = f"{prompt} {anlysis_prompt}"
         result = analyze_image_basic(image_url,persona_prompt)
-        all_results.append(result)
+        all_persona_results.append(result)
+        print("Done------")
 
-
-
-results_string = '\n'.join(all_results)
-final_prompt = f"Act as a Landing Page Expert Analyzer, please checkout the following feedback from different people about a landing page, extraact the top 10 unique suggestions, and returm them in a list in json format. feedback: {results_string}"
+#get  the overaall results
+results_string = '\n'.join(all_persona_results)
+final_prompt = f"Act as a Landing Page Expert Analyzer, please checkout the following feedback from different people about a landing page, extract 7-10 unique suggestions, and return them in a list in JSON format. Feedback: {results_string}"
 overall_analysis = generate_with_response_model(final_prompt,SuggestionsModel)
-print (overall_analysis.result)
+print(overall_analysis.result)
 

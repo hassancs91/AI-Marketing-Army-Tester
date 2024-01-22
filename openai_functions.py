@@ -1,7 +1,6 @@
 from openai import OpenAI
 import instructor
 
-
 client = OpenAI(api_key="sk-xxx")
 
 import instructor
